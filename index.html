@@ -1,0 +1,136 @@
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title></title>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+  <script src="v0_01.js"></script>
+  <script src="v0_02.js"></script>
+  <script src="v0_004.js"></script>
+  <script src="v0_005.js"></script>
+  <script src="v0_006.js"></script>
+  <script src="v0_007.js"></script>
+  <script src="v0_008.js"></script>
+  <script src="v0_009.js"></script>
+  <script src="v0_011.js"></script>
+  <script src="v0_012.js"></script>
+  <script src="v0_013.js"></script>
+  <script src="v0_014.js"></script>
+  <script src="v0_015.js"></script>
+  <script src="v0_016.js"></script>
+  <script src="v0_017.js"></script>
+  <script src="v0_018.js"></script>
+  <script src="v0_019.js"></script>
+  <script>
+    const data = {
+      '0.004': v0_004,
+      '0.005': v0_005,
+      '0.006': v0_006,
+      '0.007': v0_007,
+      '0.008': v0_008,
+      '0.009': v0_009,
+      '0.01': v0_01,
+      '0.011': v0_011,
+      '0.012': v0_012,
+      '0.013': v0_013,
+      '0.014': v0_014,
+      '0.015': v0_015,
+      '0.016': v0_016,
+      '0.017': v0_017,
+      '0.018': v0_018,
+      '0.019': v0_019,
+      '0.02': v0_02,
+    };
+  </script>
+</head>
+
+<body>
+<div class="info">
+  Sample rate:
+  <input type="range" min="0.004" max="0.02" step="0.001" onmousemove="changeSampleRate(this)" onchange="changeSampleRate(this)" value="0.004" />
+  <span id="sampleRate">0.004</span>&nbsp; &nbsp; &nbsp; &nbsp;
+  Seconds:
+  <input type="number" onchange="setTimeInSeconds(this)" onkeyup="setTimeInSeconds(this)" value="3" />&nbsp; &nbsp; &nbsp; &nbsp;
+  Frames:
+  <span id="frames">-</span>
+</div>
+<br>
+<div id="chartContainer" style="height: 400px; width: 100%;"></div>
+<script>
+  const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiYWRtaW4iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJBZG1pbmlzdHJhdG9yIiwiSWQiOiJlMGZkZmEzNC0xOGU5LTRjYjQtYjkxNC0yYjZlNTlmNjhlM2MiLCJVc2VybmFtZSI6ImFkbWluIiwiVGVuYW50SWQiOiI4Yjk5YjAyNC0wZTVmLTQxMjQtOTE2Zi1hZjBlYzVmNzA0N2EiLCJuYmYiOjE2MDE5MDY1NTAsImV4cCI6MTYwMTk2NjU1MCwiaXNzIjoiVmVyc2FDYXJkaW9TZXJ2ZXIiLCJhdWQiOiJWZXJzYUNhcmRpb1VzZXIifQ.RoHz-VeMF7gEbq0NcAejqTuiFn8VSSOXgFX1R26hAVk';
+  const run = async () => {
+    await axios.get('patientHealthData/?fromDate=2020-09-21T01:41:32.137Z&toDate=2020-09-21T01:43:10.129Z&procedureId=0a8d45e4-5e25-4d54-a287-2e626295c55a')
+  };
+  var xAxisStripLinesArray = [];
+  var yAxisStripLinesArray = [];
+  var dps = [];
+  var dataPointsArray = v0_004.slice(0, 500)
+
+  var chart = new CanvasJS.Chart("chartContainer",
+          {
+            axisY:{
+              stripLines:yAxisStripLinesArray,
+              gridThickness: 1,
+              gridColor:"#DC74A5dd",
+              lineColor:"#DC74A5dd",
+              tickColor:"#DC74A5dd",
+              labelFontColor:"#DC74A5dd",
+              maximum: 1,
+              minimum: -1,
+            },
+            axisX:{
+              stripLines:xAxisStripLinesArray,
+              gridThickness: 1,
+              gridColor:"#DC74A5aa",
+              lineColor:"#DC74A5aa",
+              tickColor:"#DC74A5aa",
+              labelFontColor:"#DC74A5aa",
+            },
+            data: [
+              {
+                type: "line", //spline
+                color:"black",
+                dataPoints: dps
+              }
+            ]
+          });
+
+  const render = () => {
+    dataPointsArray = data[sampleRate].slice(0, timeInSeconds / sampleRate);
+    const dps = addDataPointsAndStripLines(dataPointsArray);
+    chart.options.data[0].dataPoints = dps;
+    chart.render();
+    document.querySelector("#frames").innerHTML = '~' + parseInt(timeInSeconds / sampleRate);
+  }
+
+
+  let sampleRate = 0.004;
+  let timeInSeconds = 3;
+  render();
+
+
+  const changeSampleRate = e => {
+    sampleRate = e.value;
+    document.querySelector("#sampleRate").innerHTML = e.value;
+    render();
+  }
+
+  const setTimeInSeconds = e => {
+    timeInSeconds = e.value;
+    render();
+  }
+
+
+
+  function addDataPointsAndStripLines(dataPointsArray){
+    const dps = [];
+    for(var i=0; i<dataPointsArray.length;i++){
+      dps.push({y: dataPointsArray[i]});
+    }
+
+    return dps;
+  }
+</script>
+<div id="root" style="display: none !important"></div>
+</body>
+</html>
